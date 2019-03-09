@@ -1,0 +1,9 @@
+[package]
+name = "linear_equation_system_solver"
+version = "0.1.0"
+authors = ["LokiVKlokeNaAndoke <ma.ba1@rambler.ru>"]
+edition = "2018"
+
+[dependencies]
+rand = "0.6.5"
+bigdecimal = "0.0.15"
