@@ -5,6 +5,10 @@ use rand::distributions::{Distribution, Uniform};
 use std::env;
 use std::fs;
 
+/*
+First number in a source file is number of columns, rows are inferred
+*/
+
 fn main() {
     let mut matr: Matrix<BigDecimal>;
 
@@ -16,7 +20,7 @@ fn main() {
             None
         }
     };
-    let path = Some("matrix_data.txt");
+    let path = Some("matrix_data2.txt");
     if let Some(path) = path {
         let contents = fs::read_to_string(path).expect("Something went wrong reading the file");
         let mut contents = contents

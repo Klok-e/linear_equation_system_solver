@@ -86,30 +86,37 @@ impl<T: NumMatr<T>> Matrix<T> {
             }
         }
 
-        // swap rows
-        for row in 0..(self.rows - 1) {
-            let col_argnonzero = {
-                let mut arg = 0;
-                for col in 0..self.cols {
-                    if self[(&row, &col)] != T::zero() {
-                        arg = col;
-                        break;
+        // swap rows with bubble sort
+        loop {
+            let mut swapped = false;
+            for row in 0..(self.rows - 1) {
+                let col_argnonzero = {
+                    let mut arg = 0;
+                    for col in 0..self.cols {
+                        if self[(&row, &col)] != T::zero() {
+                            arg = col;
+                            break;
+                        }
                     }
-                }
-                arg
-            };
-            let col_rowbelow_argnonzero = {
-                let mut arg = 0;
-                for col in 0..self.cols {
-                    if self[(&(row + 1), &col)] != T::zero() {
-                        arg = col;
-                        break;
+                    arg
+                };
+                let col_rowbelow_argnonzero = {
+                    let mut arg = 0;
+                    for col in 0..self.cols {
+                        if self[(&(row + 1), &col)] != T::zero() {
+                            arg = col;
+                            break;
+                        }
                     }
+                    arg
+                };
+                if col_argnonzero > col_rowbelow_argnonzero {
+                    self.swap_rows(row, row + 1);
+                    swapped = true;
                 }
-                arg
-            };
-            if col_argnonzero > col_rowbelow_argnonzero {
-                self.swap_rows(row, row + 1);
+            }
+            if !swapped {
+                break;
             }
         }
         self
@@ -155,6 +162,9 @@ impl<T: NumMatr<T>> Matrix<T> {
     }
 
     pub fn swap_rows(&mut self, row1: usize, row2: usize) {
+        if row1 >= self.rows || row2 >= self.rows {
+            panic!();
+        }
         for col in 0..self.cols {
             let val1 = self[(&row1, &col)].clone();
             self[(&row1, &col)] = self[(&row2, &col)].clone();
