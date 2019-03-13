@@ -43,7 +43,7 @@ impl<T: NumMatr<T>> Matrix<T> {
         self.data.iter_mut()
     }
 
-    pub fn to_reduced_row_echelon(&mut self) -> &mut Self {
+    pub fn to_reduced_row_echelon(mut self) -> Self {
         // to row echelon form
         for row in 0..self.rows {
             let lead_coef: Option<(T, usize)> = {
@@ -122,10 +122,10 @@ impl<T: NumMatr<T>> Matrix<T> {
         self
     }
 
-    pub fn to_canonical_form(&mut self) -> &mut Self {
+    pub fn to_canonical_form(mut self) -> Self {
         for row in 0..self.rows {
             let first_at_row = {
-                let mut res = T::zero();
+                let mut res = self[(&row, &0)].clone();
                 for col in 0..self.cols {
                     if self[(&row, &col)] != T::zero() {
                         res = self[(&row, &col)].clone();
