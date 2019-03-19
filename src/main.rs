@@ -67,9 +67,40 @@ fn main() {
         }
         matr
     };
+    let matr_orig = matr.clone();
     println!("{}", matr);
-    let matr = matr.to_reduced_row_echelon();
+    let matr = matr_orig
+        .clone()
+        .to_reduced_row_echelon()
+        .to_canonical_form();
     println!("{}", matr);
-    let matr = matr.to_canonical_form();
-    println!("{}", matr);
+    let are_zeros = matr.are_zeros_at_maindiag();
+    if are_zeros {
+        println!("Incompatible matrix");
+    } else if matr.cols() - 1 == matr.rows() {
+        let mut solution: Vec<BigDecimal> = Vec::new();
+        for i in 0..matr.rows() {
+            solution.push(matr[(&i, &(matr.cols() - 1))].clone());
+            println!("{}", i);
+        }
+        let mut error = BigDecimal::zero();
+        for row in 0..matr_orig.rows() {
+            //println!("row {}", row);
+            let result = {
+                let mut sum = BigDecimal::zero();
+                for col in 0..(matr_orig.cols() - 1) {
+                    //println!("col {} {}", col,matr_orig.cols()-1);
+                    sum += matr_orig[(&row, &col)].clone() * solution[col].clone();
+                }
+                sum
+            };
+            error += (result - matr_orig[(&row, &(matr_orig.cols() - 1))].clone()).abs();
+        }
+        println!("Accuracy of a solution: ");
+        for i in 0..solution.len() {
+            let elem = solution[i].clone();
+            println!("x{} = {}", i, elem);
+        }
+        println!("is {}", error);
+    }
 }

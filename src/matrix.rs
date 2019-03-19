@@ -24,6 +24,14 @@ impl<T: NumMatr<T>> Matrix<T> {
         }
     }
 
+    pub fn rows(&self) -> usize {
+        self.rows
+    }
+
+    pub fn cols(&self) -> usize {
+        self.cols
+    }
+
     pub fn with(data: Vec<T>, rows: usize, cols: usize) -> Self {
         if rows * cols != data.len() {
             panic!("wrong data size");
@@ -132,11 +140,26 @@ impl<T: NumMatr<T>> Matrix<T> {
                         break;
                     }
                 }
-                res
+                if res.is_zero() {
+                    None
+                } else {
+                    Some(res)
+                }
             };
-            self.divide_row_by(row, first_at_row);
+            if let Some(first_at_row) = first_at_row {
+                self.divide_row_by(row, first_at_row);
+            }
         }
         self
+    }
+
+    pub fn are_zeros_at_maindiag(&self) -> bool {
+        for i in 0..std::cmp::min(self.rows, self.cols) {
+            if self[(&i, &i)].is_zero() {
+                return true;
+            }
+        }
+        return false;
     }
 
     fn divide_row_by(&mut self, row: usize, div: T) {
@@ -179,6 +202,12 @@ impl<T: NumMatr<T>> Index<(&usize, &usize)> for Matrix<T> {
     fn index(&self, coords: (&usize, &usize)) -> &Self::Output {
         let row = coords.0;
         let col = coords.1;
+        if row >= &self.rows || col >= &self.cols {
+            panic!(
+                "error: row {}, col {} rows {}, cols {}",
+                row, col, self.rows, self.cols
+            );
+        }
         &self.data[row * self.cols + col]
     }
 }
@@ -211,5 +240,15 @@ impl<T: NumMatr<T>> fmt::Display for Matrix<T> {
             }
         }
         write!(f, "\n")
+    }
+}
+
+impl<T: NumMatr<T>> Clone for Matrix<T> {
+    fn clone(&self) -> Self {
+        Matrix {
+            cols: self.cols,
+            rows: self.rows,
+            data: self.data.clone(),
+        }
     }
 }
