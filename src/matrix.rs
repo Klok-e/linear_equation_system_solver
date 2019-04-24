@@ -213,7 +213,7 @@ impl<T: NumMatr<T> + Signed> Matrix<T> {
 
         // do iter
         let mut iters = 0;
-        while calc_accuracy(&res, self) > accuracy.clone() && iters < 1000 {
+        while calc_accuracy(&res, self) > accuracy.clone() && iters < 10000 {
             let newres = res.clone();
             for i in 0..self.rows {
                 let mut sum = self[(&i, &(self.cols - 1))].clone();
@@ -242,7 +242,7 @@ impl<T: NumMatr<T> + Signed> Matrix<T> {
 
         // do iter
         let mut iters = 0;
-        while calc_accuracy(&res, self) > accuracy.clone() && iters < 1000 {
+        while calc_accuracy(&res, self) > accuracy.clone() && iters < 10000 {
             for i in 0..self.rows {
                 let mut sum = self[(&i, &(self.cols - 1))].clone();
                 for col in 0..(self.cols - 1) {

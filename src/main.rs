@@ -12,15 +12,14 @@ First number in a source file is number of columns, rows are inferred
 */
 
 fn main() {
-    let path = {
+    let path = Some({
         let mut args: Vec<String> = env::args().collect();
         if args.len() > 1 {
-            Some(args.pop().unwrap())
+            args.pop().unwrap()
         } else {
-            None
+            "matrix_data.txt".to_owned()
         }
-    };
-    let path = Some("matrix_data.txt");
+    });
 
     let matr = {
         let mut matr: Matrix<BigDecimal>;
