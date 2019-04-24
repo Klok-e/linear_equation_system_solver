@@ -1,6 +1,6 @@
 mod matrix;
 use bigdecimal::*;
-use matrix::Matrix;
+use matrix::*;
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::SeedableRng;
 use rand::rngs::SmallRng;
@@ -20,7 +20,7 @@ fn main() {
             None
         }
     };
-    //let path = Some("matrix_data2.txt");
+    let path = Some("matrix_data.txt");
 
     let matr = {
         let mut matr: Matrix<BigDecimal>;
@@ -67,8 +67,8 @@ fn main() {
         }
         matr
     };
-    let matr_orig = matr.clone();
-    println!("{}", matr);
+    let matr_orig = matr;
+    println!("{}", matr_orig);
     let matr = matr_orig
         .clone()
         .to_reduced_row_echelon()
@@ -83,24 +83,33 @@ fn main() {
             solution.push(matr[(&i, &(matr.cols() - 1))].clone());
             println!("{}", i);
         }
-        let mut error = BigDecimal::zero();
-        for row in 0..matr_orig.rows() {
-            //println!("row {}", row);
-            let result = {
-                let mut sum = BigDecimal::zero();
-                for col in 0..(matr_orig.cols() - 1) {
-                    //println!("col {} {}", col,matr_orig.cols()-1);
-                    sum += matr_orig[(&row, &col)].clone() * solution[col].clone();
-                }
-                sum
-            };
-            error += (result - matr_orig[(&row, &(matr_orig.cols() - 1))].clone()).abs();
-        }
-        println!("Accuracy of a solution: ");
+        println!("Accuracy of a solution with Gauss: ");
+        let error = calc_accuracy(&solution, &matr_orig);
         for i in 0..solution.len() {
             let elem = solution[i].clone();
-            println!("x{} = {}", i, elem);
+            println!("x{} = {:.5}", i, elem);
         }
-        println!("is {}", error);
+        println!("is {:.5}", error);
+
+        let acc = BigDecimal::from(0.000001);
+        println!("Accuracy of a solution with Simple Iters: ");
+        let (solution, iters) = matr_orig.solve_simple_iterations(&acc);
+        let error = calc_accuracy(&solution, &matr_orig);
+        for i in 0..solution.len() {
+            let elem = solution[i].clone();
+            println!("x{} = {:.5}", i, elem);
+        }
+        println!("is {:.5}", error);
+        println!("obtained with {} steps", iters);
+
+        println!("Accuracy of a solution with Zeidel: ");
+        let (solution, iters) = matr_orig.solve_zeidel_iterations(&acc);
+        let error = calc_accuracy(&solution, &matr_orig);
+        for i in 0..solution.len() {
+            let elem = solution[i].clone();
+            println!("x{} = {:.5}", i, elem);
+        }
+        println!("is {:.5}", error);
+        println!("obtained with {} steps", iters);
     }
 }

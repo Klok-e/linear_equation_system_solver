@@ -1,20 +1,27 @@
 use bigdecimal::Num;
+use bigdecimal::*;
 use std::clone::Clone;
 use std::fmt;
 use std::ops::{Index, IndexMut, Neg};
 use std::slice::{Iter, IterMut};
 
-pub trait NumMatr<T>: Num + Clone + fmt::Display + Neg<Output = T> {}
+pub trait NumMatr<T>:
+    fmt::Debug + Num + Clone + fmt::Display + Neg<Output = T> + PartialOrd
+{
+}
 
-impl<T> NumMatr<T> for T where T: Num + Clone + fmt::Display + Neg<Output = T> {}
+impl<T> NumMatr<T> for T where
+    T: fmt::Debug + Num + Clone + fmt::Display + Neg<Output = T> + PartialOrd
+{
+}
 
-pub struct Matrix<T: NumMatr<T>> {
+pub struct Matrix<T: NumMatr<T> + Signed> {
     data: Box<[T]>,
     rows: usize,
     cols: usize,
 }
 
-impl<T: NumMatr<T>> Matrix<T> {
+impl<T: NumMatr<T> + Signed> Matrix<T> {
     pub fn new(rows: usize, cols: usize) -> Self {
         let data = vec![T::zero(); rows * cols];
         Matrix {
@@ -194,9 +201,66 @@ impl<T: NumMatr<T>> Matrix<T> {
             self[(&row2, &col)] = val1;
         }
     }
+
+    pub fn solve_simple_iterations(&self, accuracy: &T) -> (Vec<T>, usize) {
+        if self.cols != self.rows + 1 {
+            panic!();
+        }
+        let mut res: Vec<T> = Vec::with_capacity(self.rows);
+        for _ in 0..self.rows {
+            res.push(T::zero());
+        }
+
+        // do iter
+        let mut iters = 0;
+        while calc_accuracy(&res, self) > accuracy.clone() && iters < 1000 {
+            let newres = res.clone();
+            for i in 0..self.rows {
+                let mut sum = self[(&i, &(self.cols - 1))].clone();
+                for col in 0..(self.cols - 1) {
+                    if i != col {
+                        sum = sum - self[(&i, &col)].clone() * newres[col].clone();
+                    }
+                }
+                res[i] = sum / self[(&i, &i)].clone();
+            }
+            iters += 1;
+            //println!("{:?}",res);
+        }
+
+        (res, iters)
+    }
+
+    pub fn solve_zeidel_iterations(&self, accuracy: &T) -> (Vec<T>, usize) {
+        if self.cols != self.rows + 1 {
+            panic!();
+        }
+        let mut res: Vec<T> = Vec::with_capacity(self.rows);
+        for _ in 0..self.rows {
+            res.push(T::zero());
+        }
+
+        // do iter
+        let mut iters = 0;
+        while calc_accuracy(&res, self) > accuracy.clone() && iters < 1000 {
+            for i in 0..self.rows {
+                let mut sum = self[(&i, &(self.cols - 1))].clone();
+                for col in 0..(self.cols - 1) {
+                    if i != col {
+                        sum = sum - self[(&i, &col)].clone() * res[col].clone();
+                    }
+                }
+                res[i] = sum / self[(&i, &i)].clone();
+            }
+            iters += 1;
+            //println!("accuracy: {:.5}",calc_accuracy(&res, self));
+        }
+
+        (res, iters)
+    }
 }
 
-impl<T: NumMatr<T>> Index<(&usize, &usize)> for Matrix<T> {
+impl<T: NumMatr<T> + Signed> Index<(&usize, &usize)> for Matrix<T> {
     type Output = T;
 
     fn index(&self, coords: (&usize, &usize)) -> &Self::Output {
@@ -212,7 +276,7 @@ impl<T: NumMatr<T>> Index<(&usize, &usize)> for Matrix<T> {
     }
 }
 
-impl<T: NumMatr<T>> IndexMut<(&usize, &usize)> for Matrix<T> {
+impl<T: NumMatr<T> + Signed> IndexMut<(&usize, &usize)> for Matrix<T> {
     fn index_mut(&mut self, coords: (&usize, &usize)) -> &mut Self::Output {
         let row = coords.0;
         let col = coords.1;
@@ -220,7 +284,7 @@ impl<T: NumMatr<T>> IndexMut<(&usize, &usize)> for Matrix<T> {
     }
 }
 
-impl<T: NumMatr<T>> fmt::Display for Matrix<T> {
+impl<T: NumMatr<T> + Signed> fmt::Display for Matrix<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "[")?;
         for (i, elem) in self.iter().enumerate() {
@@ -243,7 +307,7 @@ impl<T: NumMatr<T>> fmt::Display for Matrix<T> {
     }
 }
 
-impl<T: NumMatr<T>> Clone for Matrix<T> {
+impl<T: NumMatr<T> + Signed> Clone for Matrix<T> {
     fn clone(&self) -> Self {
         Matrix {
             cols: self.cols,
@@ -251,4 +315,21 @@ impl<T: NumMatr<T>> Clone for Matrix<T> {
             data: self.data.clone(),
         }
     }
+}
+
+pub fn calc_accuracy<T: NumMatr<T> + Signed>(res: &Vec<T>, matr: &Matrix<T>) -> T {
+    let mut error = T::zero();
+    for row in 0..matr.rows() {
+        //println!("row {}", row);
+        let result = {
+            let mut sum = T::zero();
+            for col in 0..(matr.cols() - 1) {
+                //println!("col {} {}", col,matr_orig.cols()-1);
+                sum = sum + matr[(&row, &col)].clone() * res[col].clone();
+            }
+            sum
+        };
+        error = error + (result - matr[(&row, &(matr.cols() - 1))].clone()).abs();
+    }
+    error
 }
