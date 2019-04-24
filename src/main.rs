@@ -80,7 +80,7 @@ fn main() {
         let mut solution: Vec<BigDecimal> = Vec::new();
         for i in 0..matr.rows() {
             solution.push(matr[(&i, &(matr.cols() - 1))].clone());
-            println!("{}", i);
+            //println!("{}", i);
         }
         println!("Accuracy of a solution with Gauss: ");
         let error = calc_accuracy(&solution, &matr_orig);
